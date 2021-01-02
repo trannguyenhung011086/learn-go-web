@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"text/template"
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
@@ -11,7 +14,25 @@ func home(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	w.Write([]byte("Hello form SnippetBox"))
+
+	files := []string{
+		"./ui/html/home.page.html",
+		"./ui/html/base.layout.html",
+		"./ui/html/footer.partial.html",
+	}
+
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
+	err = ts.Execute(w, nil)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func showSnippet(w http.ResponseWriter, r *http.Request) {
@@ -30,5 +51,16 @@ func createSnippet(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	w.Write([]byte("Creating snippet"))
+	w.Write([]byte(`{"message": "Creating snippet"}`))
+}
+
+func serveStatic(mux *http.ServeMux, path string) *http.ServeMux {
+	fileServer := http.FileServer(http.Dir(path))
+	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
+	return mux
+}
+
+func downloadFile(w http.ResponseWriter, r *http.Request, path string) {
+	filepath.Clean(path)
+	http.ServeFile(w, r, path)
 }
