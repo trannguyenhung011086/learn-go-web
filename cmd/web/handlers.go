@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -16,20 +15,20 @@ func home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	files := []string{
-		"./ui/html/home.page.html",
+		"./ui/html/home.page.html1",
 		"./ui/html/base.layout.html",
 		"./ui/html/footer.partial.html",
 	}
 
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		log.Println(err.Error())
+		errorLog.Println(err.Error())
 		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
 	err = ts.Execute(w, nil)
 	if err != nil {
-		log.Println(err.Error())
+		errorLog.Println(err.Error())
 		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}

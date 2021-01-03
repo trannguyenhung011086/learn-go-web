@@ -1,11 +1,20 @@
 package main
 
 import (
-	"log"
+	"flag"
 	"net/http"
+	"trannguyenhung011086/learn-go-web/pkg/logger"
+)
+
+var (
+	infoLog  = logger.InfoLog()
+	errorLog = logger.ErrorLog()
 )
 
 func main() {
+	addr := flag.String("addr", ":4000", "HTTP address port")
+	flag.Parse()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", home)
 	mux.HandleFunc("/snippet", showSnippet)
@@ -13,10 +22,16 @@ func main() {
 
 	serveStatic(mux, "./ui/static")
 
-	log.Println("Starting server on port 4000")
+	infoLog.Printf("Starting server on port %s", *addr)
 
-	err := http.ListenAndServe(":4000", mux)
+	server := &http.Server{
+		Addr:     *addr,
+		ErrorLog: errorLog,
+		Handler:  mux,
+	}
+
+	err := server.ListenAndServe()
 	if err != nil {
-		log.Fatal(err)
+		errorLog.Fatal(err)
 	}
 }
