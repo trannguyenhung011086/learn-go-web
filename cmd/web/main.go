@@ -2,15 +2,9 @@ package main
 
 import (
 	"flag"
-	"log"
 	"net/http"
 	"trannguyenhung011086/learn-go-web/pkg/logger"
 )
-
-type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-}
 
 func main() {
 	addr := flag.String("addr", ":4000", "HTTP address port")
@@ -21,20 +15,13 @@ func main() {
 		infoLog:  logger.InfoLog(),
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet", app.showSnippet)
-	mux.HandleFunc("/snippet/create", app.createSnippet)
-
-	app.serveStatic(mux, "./ui/static")
-
-	app.infoLog.Printf("Starting server on port %s", *addr)
-
 	server := &http.Server{
 		Addr:     *addr,
 		ErrorLog: app.errorLog,
-		Handler:  mux,
+		Handler:  app.routes(),
 	}
+
+	app.infoLog.Printf("Starting server on port %s", *addr)
 
 	err := server.ListenAndServe()
 	if err != nil {

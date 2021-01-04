@@ -2,11 +2,17 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"path/filepath"
 	"strconv"
 	"text/template"
 )
+
+type application struct {
+	errorLog *log.Logger
+	infoLog  *log.Logger
+}
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
@@ -51,13 +57,13 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"message": "Creating snippet"}`))
 }
 
-func (app *application) serveStatic(mux *http.ServeMux, path string) *http.ServeMux {
+func serveStatic(mux *http.ServeMux, path string) *http.ServeMux {
 	fileServer := http.FileServer(http.Dir(path))
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 	return mux
 }
 
-func (app *application) downloadFile(w http.ResponseWriter, r *http.Request, path string) {
+func downloadFile(w http.ResponseWriter, r *http.Request, path string) {
 	filepath.Clean(path)
 	http.ServeFile(w, r, path)
 }
