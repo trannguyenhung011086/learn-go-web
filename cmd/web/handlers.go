@@ -2,17 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"path/filepath"
 	"strconv"
 	"text/template"
 )
-
-type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-}
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
