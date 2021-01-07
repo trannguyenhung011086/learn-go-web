@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
-	"text/template"
+	"trannguyenhung011086/learn-go-web/pkg/models"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -14,22 +14,32 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	files := []string{
-		"./ui/html/home.page.html",
-		"./ui/html/base.layout.html",
-		"./ui/html/footer.partial.html",
+	s, err := app.snippets.Latest(10)
+	if err != nil {
+		app.serverError(w, err)
+		return
 	}
 
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		return
+	for _, snippet := range s {
+		fmt.Fprintf(w, "%v\n\n", snippet)
 	}
-	err = ts.Execute(w, nil)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
+
+	// files := []string{
+	// 	"./ui/html/home.page.html",
+	// 	"./ui/html/base.layout.html",
+	// 	"./ui/html/footer.partial.html",
+	// }
+
+	// ts, err := template.ParseFiles(files...)
+	// if err != nil {
+	// 	app.serverError(w, err)
+	// 	return
+	// }
+	// err = ts.Execute(w, nil)
+	// if err != nil {
+	// 	app.serverError(w, err)
+	// 	return
+	// }
 }
 
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +48,17 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		app.notFoundError(w)
 		return
 	}
-	fmt.Fprintf(w, "Displaying snippet with id %d", id)
+
+	s, err := app.snippets.Get(id)
+	if err == models.ErrNoRecord {
+		app.notFoundError(w)
+		return
+	} else if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	fmt.Fprintf(w, "%v", s)
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +68,18 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
-	w.Write([]byte(`{"message": "Creating snippet"}`))
+
+	title := "O snail"
+	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi"
+	expires := "7"
+
+	id, err := app.snippets.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/snippet?id=%d", id), http.StatusSeeOther)
 }
 
 func serveStatic(mux *http.ServeMux, path string) *http.ServeMux {
