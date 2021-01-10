@@ -28,12 +28,12 @@ func newTemplateCache(dir string) (map[string]*template.Template, error) {
 			return nil, err
 		}
 
-		ts, err = template.ParseGlob(filepath.Join(dir, "*.layout.html"))
+		ts, err = ts.ParseGlob(filepath.Join(dir, "*.layout.html"))
 		if err != nil {
 			return nil, err
 		}
 
-		ts, err = template.ParseGlob(filepath.Join(dir, "*.partial.html"))
+		ts, err = ts.ParseGlob(filepath.Join(dir, "*.partial.html"))
 		if err != nil {
 			return nil, err
 		}
