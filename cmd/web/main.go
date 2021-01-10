@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"html/template"
 	"log"
 	"net/http"
 	"trannguyenhung011086/learn-go-web/pkg/logger"
@@ -11,9 +12,10 @@ import (
 )
 
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	snippets *mysql.SnippetModel
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	snippets      *mysql.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -27,10 +29,16 @@ func main() {
 	}
 	defer db.Close()
 
+	templateCache, err := newTemplateCache("./ui/html/")
+	if err != nil {
+		logger.ErrorLog().Fatal(err)
+	}
+
 	app := &application{
-		errorLog: logger.ErrorLog(),
-		infoLog:  logger.InfoLog(),
-		snippets: &mysql.SnippetModel{DB: db},
+		errorLog:      logger.ErrorLog(),
+		infoLog:       logger.InfoLog(),
+		snippets:      &mysql.SnippetModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	server := &http.Server{
