@@ -3,17 +3,11 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"path/filepath"
 	"strconv"
 	"trannguyenhung011086/learn-go-web/pkg/models"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		app.notFoundError(w)
-		return
-	}
-
 	s, err := app.snippets.Latest(10)
 	if err != nil {
 		app.serverError(w, err)
@@ -24,7 +18,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	id, err := strconv.Atoi(r.URL.Query().Get(":id"))
 	if err != nil || id < 1 {
 		app.notFoundError(w)
 		return
@@ -42,14 +36,11 @@ func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "show.page.html", &templateData{Snippet: s})
 }
 
-func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Allow", "POST")
-	w.Header().Set("Content-Type", "application/json")
-	if r.Method != "POST" {
-		app.clientError(w, http.StatusMethodNotAllowed)
-		return
-	}
+func (app *application) createSnippetForm(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Creating new snippet..."))
+}
 
+func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	title := "O snail"
 	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi"
 	expires := "7"
@@ -60,16 +51,5 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/snippet?id=%d", id), http.StatusSeeOther)
-}
-
-func serveStatic(mux *http.ServeMux, path string) *http.ServeMux {
-	fileServer := http.FileServer(http.Dir(path))
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-	return mux
-}
-
-func downloadFile(w http.ResponseWriter, r *http.Request, path string) {
-	filepath.Clean(path)
-	http.ServeFile(w, r, path)
+	http.Redirect(w, r, fmt.Sprintf("/snippet/%d", id), http.StatusSeeOther)
 }
