@@ -13,7 +13,23 @@ func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Create new user...")
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadGateway)
+		return
+	}
+
+	form := forms.New(r.PostForm)
+	form.Required("name", "email", "password")
+	form.MatchesPattern("email", forms.EmailRX)
+	form.MinLength("password", 10)
+
+	if !form.Valid() {
+		app.render(w, r, "signup.page.html", &templateData{Form: form})
+		return
+	}
+
+	fmt.Fprintln(w, "Creating new user...")
 }
 
 func (app *application) loginUserForm(w http.ResponseWriter, r *http.Request) {
